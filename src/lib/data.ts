@@ -1,0 +1,68 @@
+import type { Vehicle } from './types';
+
+export const initialVehicles: Vehicle[] = [
+  {
+    id: 'f9a8d7e6',
+    name: 'Honda CR-V',
+    type: 'SUV',
+    year: 2023,
+    price: 350,
+    availability: 'Available',
+  },
+  {
+    id: 'b3c4e5f6',
+    name: 'Ford F-150',
+    type: 'Truck',
+    year: 2022,
+    price: 450,
+    availability: 'Rented',
+  },
+  {
+    id: 'a1b2c3d4',
+    name: 'Toyota Camry',
+    type: 'Sedan',
+    year: 2024,
+    price: 300,
+    availability: 'Available',
+  },
+  {
+    id: 'd5e6f7g8',
+    name: 'Ford Transit',
+    type: 'Van',
+    year: 2021,
+    price: 500,
+    availability: 'Available',
+  },
+  {
+    id: 'h9i0j1k2',
+    name: 'Harley-Davidson Sportster',
+    type: 'Motorcycle',
+    year: 2020,
+    price: 250,
+    availability: 'Rented',
+  },
+  {
+    id: 'l3m4n5o6',
+    name: 'Jeep Wrangler',
+    type: 'SUV',
+    year: 2023,
+    price: 400,
+    availability: 'Available',
+  },
+  {
+    id: 'p7q8r9s0',
+    name: 'Chevrolet Silverado',
+    type: 'Truck',
+    year: 2024,
+    price: 480,
+    availability: 'Available',
+  },
+  {
+    id: 't1u2v3w4',
+    name: 'Honda Accord',
+    type: 'Sedan',
+    year: 2023,
+    price: 320,
+    availability: 'Rented',
+  },
+];
