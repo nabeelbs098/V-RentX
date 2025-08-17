@@ -4,8 +4,7 @@ import * as React from "react"
 import { PlusCircle, Search } from "lucide-react"
 import { getColumns } from "./columns"
 import { DataTable } from "./data-table"
-import { initialVehicles } from "@/lib/data"
-import { Vehicle, vehicleSchema, vehicleTypes, vehicleAvailabilities } from "@/lib/types"
+import { Vehicle, vehicleTypes, vehicleAvailabilities } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -21,7 +20,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
 import {
   AlertDialog,
@@ -42,9 +40,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { db } from "@/lib/firebase"
+import { collection, onSnapshot, addDoc, updateDoc, doc, deleteDoc } from "firebase/firestore"
 
 export function FleetManager() {
-  const [vehicles, setVehicles] = React.useState<Vehicle[]>(initialVehicles)
+  const [vehicles, setVehicles] = React.useState<Vehicle[]>([])
   const [search, setSearch] = React.useState("")
   const [typeFilter, setTypeFilter] = React.useState<string>("all")
   const [availabilityFilter, setAvailabilityFilter] = React.useState<string>("all")
@@ -56,6 +56,14 @@ export function FleetManager() {
   const [deletingVehicleId, setDeletingVehicleId] = React.useState<string | null>(null)
 
   const { toast } = useToast()
+
+  React.useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, "vehicles"), (snapshot) => {
+      const vehiclesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Vehicle[];
+      setVehicles(vehiclesData);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const handleAddNew = () => {
     setEditingVehicle(null)
@@ -72,39 +80,53 @@ export function FleetManager() {
     setIsAlertOpen(true)
   }
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (deletingVehicleId) {
-      setVehicles(vehicles.filter((v) => v.id !== deletingVehicleId))
-      toast({
-        title: "Vehicle Removed",
-        description: "The vehicle has been successfully removed from the fleet.",
-      })
+      try {
+        await deleteDoc(doc(db, "vehicles", deletingVehicleId));
+        toast({
+          title: "Vehicle Removed",
+          description: "The vehicle has been successfully removed from the fleet.",
+        })
+      } catch (error) {
+        toast({
+          title: "Error removing vehicle",
+          description: "There was a problem removing the vehicle. Please try again.",
+          variant: "destructive"
+        })
+      }
     }
     setIsAlertOpen(false)
     setDeletingVehicleId(null)
   }
 
-  const handleFormSubmit = (data: Vehicle) => {
-    if (editingVehicle) {
-      // Update
-      setVehicles(
-        vehicles.map((v) => (v.id === editingVehicle.id ? { ...v, ...data, id: v.id } : v))
-      )
-      toast({
-        title: "Vehicle Updated",
-        description: "The vehicle details have been successfully updated.",
-      })
-    } else {
-      // Add
-      const newVehicle = { ...data, id: crypto.randomUUID() };
-      setVehicles([newVehicle, ...vehicles])
-      toast({
-        title: "Vehicle Added",
-        description: "A new vehicle has been successfully added to the fleet.",
+  const handleFormSubmit = async (data: Omit<Vehicle, 'id'>) => {
+    try {
+      if (editingVehicle && editingVehicle.id) {
+        // Update
+        const vehicleRef = doc(db, "vehicles", editingVehicle.id);
+        await updateDoc(vehicleRef, data);
+        toast({
+          title: "Vehicle Updated",
+          description: "The vehicle details have been successfully updated.",
+        })
+      } else {
+        // Add
+        await addDoc(collection(db, "vehicles"), data);
+        toast({
+          title: "Vehicle Added",
+          description: "A new vehicle has been successfully added to the fleet.",
+        })
+      }
+      setIsFormOpen(false)
+      setEditingVehicle(null)
+    } catch (error) {
+       toast({
+        title: "Error submitting form",
+        description: "There was a problem saving the vehicle. Please try again.",
+        variant: "destructive"
       })
     }
-    setIsFormOpen(false)
-    setEditingVehicle(null)
   }
 
   const columns = React.useMemo(() => getColumns({ onEdit: handleEdit, onDelete: handleDeleteRequest }), []);

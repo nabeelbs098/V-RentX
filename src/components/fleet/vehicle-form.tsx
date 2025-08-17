@@ -25,15 +25,21 @@ import { vehicleSchema, vehicleTypes, vehicleAvailabilities, type Vehicle } from
 
 
 type VehicleFormProps = {
-  onSubmit: (data: Vehicle) => void;
+  onSubmit: (data: Omit<Vehicle, 'id'>) => void;
   onCancel: () => void;
   vehicle: Vehicle | null;
 }
 
 export function VehicleForm({ onSubmit, onCancel, vehicle }: VehicleFormProps) {
   const form = useForm<z.infer<typeof vehicleSchema>>({
-    resolver: zodResolver(vehicleSchema),
-    defaultValues: vehicle || {
+    resolver: zodResolver(vehicleSchema.omit({ id: true })),
+    defaultValues: vehicle ? {
+      name: vehicle.name,
+      type: vehicle.type,
+      year: vehicle.year,
+      price: vehicle.price,
+      availability: vehicle.availability,
+    } : {
       name: "",
       type: "Sedan",
       year: new Date().getFullYear(),
@@ -86,7 +92,7 @@ export function VehicleForm({ onSubmit, onCancel, vehicle }: VehicleFormProps) {
                 <FormItem>
                 <FormLabel>Year</FormLabel>
                 <FormControl>
-                    <Input type="number" placeholder="2024" {...field} />
+                    <Input type="number" placeholder="2024" {...field} onChange={event => field.onChange(+event.target.value)} />
                 </FormControl>
                 <FormMessage />
                 </FormItem>
@@ -101,7 +107,7 @@ export function VehicleForm({ onSubmit, onCancel, vehicle }: VehicleFormProps) {
                 <FormItem>
                 <FormLabel>Price / day</FormLabel>
                 <FormControl>
-                    <Input type="number" placeholder="150" {...field} />
+                    <Input type="number" placeholder="150" {...field} onChange={event => field.onChange(+event.target.value)} />
                 </FormControl>
                 <FormMessage />
                 </FormItem>
